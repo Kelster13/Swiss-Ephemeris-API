@@ -6,6 +6,7 @@ from timezonefinder import TimezoneFinder
 from geopy.geocoders import Nominatim
 import swisseph as swe
 import math
+import requests
 from typing import Dict, Any, Optional
 
 app = FastAPI(title="Birth Chart API (Swiss Ephemeris)", version="1.0.0")
