@@ -76,16 +76,37 @@ def round_to_arcminute(pos_in_sign: float):
 
 
 def geocode_location(query: str):
-    # Nominatim geocode (free, rate-limited; fine for early-stage)
+    # 1) Try Nominatim first (free, but often rate-limited / flaky on cloud hosts)
     try:
         loc = geolocator.geocode(query, addressdetails=True)
+        if loc:
+            return loc.latitude, loc.longitude, loc.raw
+    except Exception:
+        pass  # fall through to fallback
+
+    # 2) Fallback: Open-Meteo Geocoding API (no key)
+    try:
+        r = requests.get(
+            "https://geocoding-api.open-meteo.com/v1/search",
+            params={"name": query, "count": 1, "language": "en", "format": "json"},
+            timeout=10,
+        )
+        r.raise_for_status()
+        data = r.json()
+        results = data.get("results") or []
+        if not results:
+            raise HTTPException(status_code=404, detail="Location not found. Try 'City, State, Country'.")
+
+        best = results[0]
+        lat = float(best["latitude"])
+        lon = float(best["longitude"])
+        return lat, lon, {"source": "open-meteo", "result": best}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Geocoding error: {str(e)}")
 
-    if not loc:
-        raise HTTPException(status_code=404, detail="Location not found. Try a more specific format like 'City, State, Country'.")
-
-    return loc.latitude, loc.longitude, loc.raw
 
 
 def resolve_timezone_name(lat: float, lon: float):
