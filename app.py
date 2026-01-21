@@ -15,6 +15,10 @@ EPHE_PATH = os.path.join(BASE_DIR, "ephe")
 
 swe.set_ephe_path(EPHE_PATH)
 
+print("EPHE_PATH =", EPHE_PATH)
+print("EPHE exists?", os.path.exists(EPHE_PATH))
+print("seas exists?", os.path.exists(os.path.join(EPHE_PATH, "seas_18.se1")))
+
 app = FastAPI(title="Birth Chart API (Swiss Ephemeris)", version="1.0.0")
 
 # --- Health check ---
@@ -210,9 +214,12 @@ def chart(req: ChartRequest) -> Dict[str, Any]:
     mc = ascmc[1]
 
     # 6) Planets
-    planets_out = {}
-    for name, body in PLANETS.items():
+planets_out = {}
+
+for name, body in PLANETS.items():
+    try:
         res = swe.calc_ut(jd_ut, body, FLAGS)[0]
+
         ecl_lon = normalize_deg(res[0])
         speed_lon = res[3]  # deg/day
         retro = speed_lon < 0
@@ -227,9 +234,15 @@ def chart(req: ChartRequest) -> Dict[str, Any]:
             "sign": sign,
             "deg": d,
             "min": m,
-            "lon_deg": ecl_lon,       # keep precise value for internal use
+            "lon_deg": ecl_lon,  # keep precise value
             "retrograde": retro,
             "house": house_num
+        }
+
+    except swe.Error as e:
+        # Don’t crash the whole chart if ONE body (Chiron/Lilith/etc) is missing files
+        planets_out[name] = {
+            "error": f"{type(e).__name__}: {str(e)}"
         }
 
     # 7) Angles formatted
