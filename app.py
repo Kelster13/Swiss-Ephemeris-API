@@ -7,7 +7,13 @@ from geopy.geocoders import Nominatim
 import swisseph as swe
 import math
 import requests
+import os
 from typing import Dict, Any, Optional
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+EPHE_PATH = os.path.join(BASE_DIR, "ephe")
+
+swe.set_ephe_path(EPHE_PATH)
 
 app = FastAPI(title="Birth Chart API (Swiss Ephemeris)", version="1.0.0")
 
