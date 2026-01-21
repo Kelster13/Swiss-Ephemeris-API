@@ -11,6 +11,11 @@ from typing import Dict, Any, Optional
 
 app = FastAPI(title="Birth Chart API (Swiss Ephemeris)", version="1.0.0")
 
+# --- Health check ---
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
 # --- LOCKED SETTINGS (Astro-Seek parity choices) ---
 swe.set_ephe_path("./ephe")   # folder containing .se1 files
 HOUSE_SYSTEM = b'P'           # Placidus
