@@ -51,8 +51,7 @@ PLANETS = {
     "Neptune": swe.NEPTUNE,
     "Pluto": swe.PLUTO,
     "Node(M)": NODE_BODY,
-    "Chiron": swe.CHIRON,
-    "Lilith": swe.MEAN_APOG,
+    
 }
 
 class ChartRequest(BaseModel):
@@ -214,12 +213,9 @@ def chart(req: ChartRequest) -> Dict[str, Any]:
     mc = ascmc[1]
 
     # 6) Planets
-planets_out = {}
-
-for name, body in PLANETS.items():
-    try:
+    planets_out = {}
+    for name, body in PLANETS.items():
         res = swe.calc_ut(jd_ut, body, FLAGS)[0]
-
         ecl_lon = normalize_deg(res[0])
         speed_lon = res[3]  # deg/day
         retro = speed_lon < 0
@@ -234,15 +230,9 @@ for name, body in PLANETS.items():
             "sign": sign,
             "deg": d,
             "min": m,
-            "lon_deg": ecl_lon,  # keep precise value
+            "lon_deg": ecl_lon,       # keep precise value for internal use
             "retrograde": retro,
             "house": house_num
-        }
-
-    except swe.Error as e:
-        # Don’t crash the whole chart if ONE body (Chiron/Lilith/etc) is missing files
-        planets_out[name] = {
-            "error": f"{type(e).__name__}: {str(e)}"
         }
 
     # 7) Angles formatted
