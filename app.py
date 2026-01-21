@@ -41,6 +41,8 @@ PLANETS = {
     "Neptune": swe.NEPTUNE,
     "Pluto": swe.PLUTO,
     "Node(M)": NODE_BODY,
+    "Chiron": swe.CHIRON,
+    "Lilith": swe.MEAN_APOG,
 }
 
 class ChartRequest(BaseModel):
