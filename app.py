@@ -9,6 +9,7 @@ import math
 import requests
 import os
 from typing import Dict, Any, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 EPHE_PATH = os.path.join(BASE_DIR, "ephe")
@@ -20,6 +21,14 @@ print("EPHE exists?", os.path.exists(EPHE_PATH))
 print("seas exists?", os.path.exists(os.path.join(EPHE_PATH, "seas_18.se1")))
 
 app = FastAPI(title="Birth Chart API (Swiss Ephemeris)", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # testing; lock down later
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Health check ---
 @app.get("/")
