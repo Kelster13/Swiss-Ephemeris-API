@@ -106,9 +106,10 @@ def geocode_location(query: str):
         loc = geolocator.geocode(query, addressdetails=True)
         if loc:
             return loc.latitude, loc.longitude, loc.raw
-    except Exception:
-        print("[GEOCODE] Nominatim ERROR:", repr(e))  # <-- this is NEW
-       # pass  # fall through to fallback
+    except Exception as e: # THIS IS NEW
+        print("[GEOCODE] Nominatim ERROR:", repr(e))
+    #except Exception:
+       #pass  # fall through to fallback
 
     # 2) Fallback: Open-Meteo (no API key)
     try:
