@@ -108,7 +108,7 @@ def geocode_location(query: str):
             return loc.latitude, loc.longitude, loc.raw
         except Exception:
             pass  # fall through to fallback
-
+            
     # 2) Fallback: Open-Meteo (no API key)
     try:
         r = requests.get(
