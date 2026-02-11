@@ -106,7 +106,7 @@ def geocode_location(query: str):
         loc = geolocator.geocode(query, addressdetails=True)
         if loc:
             return loc.latitude, loc.longitude, loc.raw
-    
+     
      except Exception:
         pass  # fall through to fallback
 
