@@ -107,8 +107,7 @@ def geocode_location(query: str):
         if loc:
             return loc.latitude, loc.longitude, loc.raw
     except Exception as e:
-    print("[GEOCODE] Nominatim ERROR:", repr(e))
-
+        print("[GEOCODE] Nominatim ERROR:", repr(e))
     #except Exception:
         #pass #fall through to fallback
             
