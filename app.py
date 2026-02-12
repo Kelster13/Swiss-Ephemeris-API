@@ -238,9 +238,9 @@ def house_for_longitude(jd_ut: float, lat: float, lon: float, ecl_lon: float, ho
 def chart(req: ChartRequest) -> Dict[str, Any]:
     # 1) Geocode: City/State/Country -> lat/lon
     #lat, lon, raw = geocode_location(req.location)
-        query = req.location
+    query = req.location
     if req.country
-    query = f"{req.location}, {req.country}"
+        query = f"{req.location}, {req.country}"
     lat, lon, raw = geocode_location(query, req.country)
 
     # 2) Resolve timezone from coordinates (global + historical DST correctness comes from tz database)
