@@ -179,10 +179,6 @@ def geocode_location(query: str, country_hint: Optional[str] = None):
         raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Geocoding error: {repr(e)}")
-)
-
-
-
 
 def resolve_timezone_name(lat: float, lon: float):
     tz_name = tf.timezone_at(lat=lat, lng=lon)
