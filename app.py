@@ -99,53 +99,87 @@ def round_to_arcminute(pos_in_sign: float):
             m = 59
     return d, m
 
+def split_location(query: str):
+    q = (query or "").strip()
+    if "," in q:
+        parts = [p.strip() for p in q.split(",") if p.strip()]
+        city = parts[0] if parts else q
+        region = parts[1] if len(parts) >= 2 else None
+        return city, region
+    # handle "Huntington WV" (no comma)
+    tokens = q.split()
+    if len(tokens) >= 2 and len(tokens[-1]) in (2, 3) and tokens[-1].isalpha():
+        return " ".join(tokens[:-1]), tokens[-1]
+    return q, None
 
-def geocode_location(query: str):
-    # 1) Try Nominatim first
+
+
+def geocode_location(query: str, country_hint: Optional[str] = None):
+    # 1) Try Nominatim first (will likely fail on Render, but keep it for local/dev)
     try:
         loc = geolocator.geocode(query, addressdetails=True)
         if loc:
             return loc.latitude, loc.longitude, loc.raw
     except Exception as e:
         print("[GEOCODE] Nominatim ERROR:", repr(e))
-    #except Exception:
-        #pass #fall through to fallback
-            
-    # 2) Fallback: Open-Meteo (no API key)
+
+    # 2) Fallback: Open-Meteo
+    city, region = split_location(query)
+
+    # normalize ISO-2
+    cc = None
+    if country_hint:
+        c = country_hint.strip().upper()
+        if c == "USA":
+            c = "US"
+        if c == "UK":
+            c = "GB"
+        if len(c) == 2:
+            cc = c
+
     try:
-        r = requests.get(
-            "https://geocoding-api.open-meteo.com/v1/search",
-            params={
-                "name": query,
-                "count": 1,
-                "language": "en",
-                "format": "json"
-            },
-            timeout=10
-        )
+        params = {
+            "name": city,
+            "count": 10,
+            ############################################################################
+            # IMPORTANT: Open-Meteo uses countryCode (camelCase) per their docs
+            ############################################################################
+            "language": "en",
+            "format": "json"
+        }
+        if cc:
+            params["countryCode"] = cc
+
+        r = requests.get("https://geocoding-api.open-meteo.com/v1/search", params=params, timeout=10)
         r.raise_for_status()
         data = r.json()
 
         results = data.get("results") or []
         if not results:
-            raise HTTPException(
-                status_code=404,
-                detail="Location not found. Try 'City, State, Country'."
-            )
+            raise HTTPException(status_code=404, detail="Location not found. Try 'City, State/Province, Country'.")
+
+        # filter by region/state if provided (admin1 is state/province name)
+        if region:
+            reg = region.strip().lower()
+            filtered = []
+            for x in results:
+                admin1 = str(x.get("admin1", "")).lower()
+                # allow "WV" to match "West Virginia" via containment (best-effort)
+                if admin1 == reg or reg in admin1:
+                    filtered.append(x)
+            if filtered:
+                results = filtered
 
         best = results[0]
         lat = float(best["latitude"])
         lon = float(best["longitude"])
-
         return lat, lon, {"source": "open-meteo", "raw": best}
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Geocoding error: {str(e)}"
-        )
+        raise HTTPException(status_code=502, detail=f"Geocoding error: {repr(e)}")
+)
 
 
 
@@ -208,10 +242,10 @@ def house_for_longitude(jd_ut: float, lat: float, lon: float, ecl_lon: float, ho
 def chart(req: ChartRequest) -> Dict[str, Any]:
     # 1) Geocode: City/State/Country -> lat/lon
     #lat, lon, raw = geocode_location(req.location)
-    query = req.location
+        query = req.location
     if req.country:
         query = f"{req.location}, {req.country}"
-    lat, lon, raw = geocode_location(query)
+    lat, lon, raw = geocode_location(query, req.country)
 
     # 2) Resolve timezone from coordinates (global + historical DST correctness comes from tz database)
     tz_name = resolve_timezone_name(lat, lon)
