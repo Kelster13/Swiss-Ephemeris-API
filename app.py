@@ -43,7 +43,7 @@ NODE_BODY = swe.MEAN_NODE     # Mean Node ("Node (M)")
 
 # --- Tools ---
 tf = TimezoneFinder()
-geolocator = Nominatim(user_agent="birthchart_app_v1", timeout=10)
+geolocator = Nominatim(user_agent="ASTRAL CODEX v1 (contact kellyhelton34@aol.com)", timeout=10)
 
 SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
          "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
